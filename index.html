@@ -357,6 +357,7 @@
       espacoPresente: espacoPresente,
       espacoRequeridoTotal: espacoRequeridoTotal.toFixed(1),
       discrepancia: discrepancia,
+      idadeNaEpoca: pacienteAtivo.idade || '', // Salva a idade atual
       data: new Date().toLocaleDateString('pt-BR')
     };
 
@@ -392,6 +393,7 @@
       antSup: antSup,
       antInf: antInf,
       razAnt: razAnt,
+      idadeNaEpoca: pacienteAtivo.idade || '', // Salva a idade atual
       data: new Date().toLocaleDateString('pt-BR')
     };
 
@@ -483,7 +485,7 @@
       document.getElementById('historicoPaciente').innerHTML = "";
       btnExcluir.style.display = 'none';
       btnPDF.style.display = 'none';
-      divDados.style.display = 'none'; // Esconde a edição
+      divDados.style.display = 'none'; 
       banner.classList.add('inactive');
       document.getElementById('btnSalvarMoyers').style.display = 'none';
       document.getElementById('btnSalvarBolton').style.display = 'none';
@@ -495,7 +497,6 @@
       pacienteAtivo = { id: doc.id, ...doc.data() };
       document.getElementById('nomePacienteAtivo').innerText = pacienteAtivo.nome;
       
-      // Popula os campos do painel de edição
       document.getElementById('editNome').value = pacienteAtivo.nome || '';
       document.getElementById('editIdade').value = pacienteAtivo.idade || '';
       document.getElementById('editGenero').value = pacienteAtivo.genero || '';
@@ -503,7 +504,7 @@
       
       btnExcluir.style.display = 'block';
       btnPDF.style.display = 'block';
-      divDados.style.display = 'block'; // Mostra a edição
+      divDados.style.display = 'block'; 
       banner.classList.remove('inactive');
 
       carregarHistorico();
@@ -562,13 +563,15 @@
           snapshot.forEach(doc => {
             const a = doc.data();
             const analiseId = doc.id;
-
+            
+            // Verifica se a idade foi registrada no dia em que essa análise foi salva
+            const textoIdade = a.idadeNaEpoca ? ` <span style="color:#718096; font-size:11px;">(Aos ${a.idadeNaEpoca} anos)</span>` : '';
             const btnExcluirHtml = `<button onclick="excluirAnalise('${analiseId}')" style="background:transparent; border:none; cursor:pointer; font-size:16px; padding:0; color:#e53e3e;" title="Excluir Análise">🗑️</button>`;
 
             if (a.tipo === 'Moyers') {
               html += `<div class="timeline-item">
                         <div style="display:flex; justify-content: space-between; align-items: start;">
-                          <span><strong>Moyers (${a.arcada.toUpperCase()})</strong> - ${a.data}</span>
+                          <span><strong>Moyers (${a.arcada.toUpperCase()})</strong>${textoIdade} - ${a.data}</span>
                           ${btnExcluirHtml}
                         </div>
                         Discrepância: <strong>${a.discrepancia} mm</strong> (Req: ${a.espacoRequeridoTotal}mm)
@@ -576,7 +579,7 @@
             } else if (a.tipo === 'Bolton') {
               html += `<div class="timeline-item">
                         <div style="display:flex; justify-content: space-between; align-items: start;">
-                          <span><strong>Bolton</strong> - ${a.data}</span>
+                          <span><strong>Bolton</strong>${textoIdade} - ${a.data}</span>
                           ${btnExcluirHtml}
                         </div>
                         Razão Anterior: ${a.razAnt}% ${a.razTot ? '| Razão Total: ' + a.razTot + '%' : ''}
@@ -669,7 +672,7 @@
       </div>
       <div style="margin-bottom: 20px; font-size: 14px; color: #2d3748;">
         <p><strong>Paciente:</strong> ${pacienteAtivo.nome}</p>
-        <p><strong>Idade:</strong> ${idadeTexto}</p>
+        <p><strong>Idade Atual:</strong> ${idadeTexto}</p>
         <p><strong>Gênero:</strong> ${generoTexto}</p>
         <p><strong>Prontuário:</strong> ${pacienteAtivo.prontuario || 'Não informado'}</p>
         <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
