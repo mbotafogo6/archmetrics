@@ -100,10 +100,31 @@
   <!-- ÁREA ROLÁVEL CENTRAL -->
   <main class="content-area">
 
-    <!-- ABA PACIENTES (Agora é a primeira aba ativa) -->
+    <!-- ABA PACIENTES (Invertida: Cadastro primeiro) -->
     <div id="pacientes" class="tab-content active card">
-      <h3>Gerenciar Pacientes</h3>
       
+      <h3>Novo Paciente</h3>
+      <label for="novoNome">Nome do Paciente:</label>
+      <input type="text" id="novoNome" placeholder="Ex: Maria Silva">
+      
+      <label for="novaIdade">Idade (anos):</label>
+      <input type="number" id="novaIdade" placeholder="Ex: 12">
+
+      <label for="novoGenero">Gênero:</label>
+      <select id="novoGenero">
+        <option value="" disabled selected>-- Selecione --</option>
+        <option value="feminino">Feminino</option>
+        <option value="masculino">Masculino</option>
+      </select>
+
+      <label for="novoProntuario">Número do Prontuário:</label>
+      <input type="text" id="novoProntuario" placeholder="Ex: 1042">
+
+      <button class="calc-btn" style="background-color: #4a5568;" onclick="cadastrarPaciente()">+ Cadastrar Paciente</button>
+
+      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+      <h3>Gerenciar Pacientes</h3>
       <label for="selectListaPacientes">Meus Pacientes:</label>
       <select id="selectListaPacientes" onchange="selecionarPaciente()">
         <option value="">-- Selecione um Paciente --</option>
@@ -113,28 +134,11 @@
 
       <button id="btnGerarPDF" class="save-btn" style="background-color: #d69e2e; display: none; margin-top: 10px;" onclick="gerarPDF()">📄 Baixar Prontuário em PDF</button>
       <button id="btnExcluirPaciente" class="save-btn" style="background-color: #e53e3e; display: none; margin-top: 10px;" onclick="excluirPaciente()">🗑️ Excluir Paciente</button>
-
-      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
-
-      <h3>Novo Paciente</h3>
-      <label for="novoNome">Nome do Paciente:</label>
-      <input type="text" id="novoNome" placeholder="Ex: Maria Silva">
-      
-      <label for="novoProntuario">Número do Prontuário:</label>
-      <input type="text" id="novoProntuario" placeholder="Ex: 1042">
-
-      <button class="calc-btn" style="background-color: #4a5568;" onclick="cadastrarPaciente()">+ Cadastrar</button>
     </div>
 
-    <!-- ABA MOYERS -->
+    <!-- ABA MOYERS (Sem seleção de sexo) -->
     <div id="moyers" class="tab-content card">
       <h3>Análise de Moyers</h3>
-      
-      <label for="sexoMoyers">Sexo do Paciente:</label>
-      <select id="sexoMoyers">
-        <option value="masculino">Masculino</option>
-        <option value="feminino">Feminino</option>
-      </select>
 
       <label for="arcada">Arcada a Analisar:</label>
       <select id="arcada" onchange="toggleIncisivosSup()">
@@ -267,8 +271,22 @@
     }
   }
 
+  // --- FUNÇÃO MOYERS ATUALIZADA ---
   function calcularMoyers() {
-    const sexo = document.getElementById('sexoMoyers').value;
+    // 1. Verifica se existe um paciente selecionado no prontuário
+    if (!pacienteAtivo) {
+      alert("Por favor, selecione um paciente na aba 'Pacientes' antes de calcular a análise de Moyers.");
+      switchTab('pacientes');
+      return;
+    }
+
+    // 2. Extrai o sexo diretamente dos dados do paciente ativo
+    const sexo = pacienteAtivo.genero;
+    if (!sexo) {
+      alert("O paciente selecionado não possui o gênero cadastrado. Por favor, recadastre o paciente com essa informação.");
+      return;
+    }
+
     const arcada = document.getElementById('arcada').value;
     const somaIncInf = parseFloat(document.getElementById('somaIncInf').value);
     const espacoPresente = parseFloat(document.getElementById('espacoPresente').value);
@@ -313,6 +331,7 @@
     };
 
     let html = `<strong>Resultado Moyers (${arcada.toUpperCase()})</strong><br>`;
+    html += `Gênero Utilizado: <strong>${sexo === 'masculino' ? 'Masculino' : 'Feminino'}</strong><br>`;
     html += `Espaço Requerido: <strong>${espacoRequeridoTotal.toFixed(1)} mm</strong><br>`;
     html += `Discrepância de Modelo: <strong style="color:${cor}; font-size:15px;">${discrepancia > 0 ? '+' : ''}${discrepancia} mm</strong>`;
 
@@ -365,6 +384,7 @@
   let unsubscribePacientes = null;
   let unsubscribeHistorico = null;
 
+  // --- FUNÇÃO DE CADASTRO ATUALIZADA ---
   async function cadastrarPaciente() {
     if (!usuarioLogado) {
       alert("Você precisa estar logado para cadastrar pacientes.");
@@ -372,22 +392,29 @@
     }
 
     const nome = document.getElementById('novoNome').value.trim();
+    const idade = document.getElementById('novaIdade').value.trim();
+    const genero = document.getElementById('novoGenero').value;
     const prontuario = document.getElementById('novoProntuario').value.trim();
 
-    if (!nome) {
-      alert("Por favor, insira o nome do paciente.");
+    if (!nome || !idade || !genero) {
+      alert("Por favor, preencha o Nome, a Idade e o Gênero do paciente.");
       return;
     }
 
     try {
       await db.collection('pacientes').add({
         nome: nome,
+        idade: idade,
+        genero: genero,
         prontuario: prontuario,
         uidDoutor: usuarioLogado.uid,
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
       });
       alert("Paciente cadastrado com sucesso!");
+      // Limpa os campos após salvar
       document.getElementById('novoNome').value = '';
+      document.getElementById('novaIdade').value = '';
+      document.getElementById('novoGenero').value = '';
       document.getElementById('novoProntuario').value = '';
     } catch (error) {
       alert("Erro ao cadastrar paciente: " + error.message);
@@ -547,8 +574,8 @@
     }
   }
 
-  // Função para gerar PDF
-function gerarPDF() {
+  // --- FUNÇÃO GERAR PDF ATUALIZADA ---
+  function gerarPDF() {
     if (!pacienteAtivo) return;
 
     if (typeof html2pdf === 'undefined') {
@@ -562,12 +589,18 @@ function gerarPDF() {
     conteudoPDF.style.color = '#000000'; // Força texto preto
     conteudoPDF.style.backgroundColor = '#ffffff'; // Força fundo branco geral
 
+    // Variáveis formatadas para exibição no PDF
+    const idadeTexto = pacienteAtivo.idade ? pacienteAtivo.idade + ' anos' : 'Não informada';
+    const generoTexto = pacienteAtivo.genero ? (pacienteAtivo.genero === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado';
+
     conteudoPDF.innerHTML = `
       <div style="text-align: center; border-bottom: 2px solid #2b6cb0; margin-bottom: 20px; padding-bottom: 10px;">
-        <h2 style="color: #2b6cb0; margin: 0;">OrthoCalculator - Relatório Ortodôntico</h2>
+        <h2 style="color: #2b6cb0; margin: 0;">ArchMetrics - Relatório Ortodôntico</h2>
       </div>
       <div style="margin-bottom: 20px; font-size: 14px; color: #2d3748;">
         <p><strong>Paciente:</strong> ${pacienteAtivo.nome}</p>
+        <p><strong>Idade:</strong> ${idadeTexto}</p>
+        <p><strong>Gênero:</strong> ${generoTexto}</p>
         <p><strong>Prontuário:</strong> ${pacienteAtivo.prontuario || 'Não informado'}</p>
         <p><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
       </div>
@@ -581,7 +614,6 @@ function gerarPDF() {
     const botoesLixeira = historicoContainer.querySelectorAll('button');
     botoesLixeira.forEach(btn => btn.remove());
 
-    // CORREÇÃO: Força todas as caixinhas de histórico a ficarem com fundo branco e borda limpa no PDF
     const itensTimeline = historicoContainer.querySelectorAll('.timeline-item');
     itensTimeline.forEach(item => {
       item.style.backgroundColor = '#f7fafc'; // Fundo cinza bem clarinho
