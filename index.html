@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- Cache busting e tag da Apple para forçar o nome novo -->
   <link rel="manifest" href="./manifest.json?v=2">
+  <meta name="apple-mobile-web-app-title" content="ArchMetrics">
   <link rel="icon" type="image/png" href="orthologo.png">
   <link rel="apple-touch-icon" sizes="180x180" href="orthologo.png">
-  <meta name="apple-mobile-web-app-title" content="ArchMetrics">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ArchMetrics</title>
@@ -101,40 +102,70 @@
   <!-- ÁREA ROLÁVEL CENTRAL -->
   <main class="content-area">
 
-    <!-- ABA PACIENTES (Invertida: Cadastro primeiro) -->
+    <!-- ABA PACIENTES -->
     <div id="pacientes" class="tab-content active card">
       
-      <h3>Novo Paciente</h3>
-      <label for="novoNome">Nome do Paciente:</label>
-      <input type="text" id="novoNome" placeholder="Ex: Maria Silva">
-      
-      <label for="novaIdade">Idade (anos):</label>
-      <input type="number" id="novaIdade" placeholder="Ex: 12">
-
-      <label for="novoGenero">Gênero:</label>
-      <select id="novoGenero">
-        <option value="" disabled selected>-- Selecione --</option>
-        <option value="feminino">Feminino</option>
-        <option value="masculino">Masculino</option>
-      </select>
-
-      <label for="novoProntuario">Número do Prontuário:</label>
-      <input type="text" id="novoProntuario" placeholder="Ex: 1042">
-
-      <button class="calc-btn" style="background-color: #4a5568;" onclick="cadastrarPaciente()">+ Cadastrar Paciente</button>
-
-      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
-
+      <!-- SELEÇÃO DE PACIENTE -->
       <h3>Gerenciar Pacientes</h3>
       <label for="selectListaPacientes">Meus Pacientes:</label>
       <select id="selectListaPacientes" onchange="selecionarPaciente()">
         <option value="">-- Selecione um Paciente --</option>
       </select>
 
+      <!-- DADOS DO PACIENTE SELECIONADO (Editável) -->
+      <div id="dadosPaciente" style="display: none; margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <h4 style="margin-top: 0; color: #2b6cb0; font-size: 15px;">Dados do Paciente (Editável)</h4>
+        
+        <label for="editNome">Nome:</label>
+        <input type="text" id="editNome">
+        
+        <label for="editIdade">Idade (anos):</label>
+        <input type="number" id="editIdade">
+
+        <label for="editGenero">Gênero:</label>
+        <select id="editGenero">
+          <option value="" disabled>-- Selecione --</option>
+          <option value="feminino">Feminino</option>
+          <option value="masculino">Masculino</option>
+        </select>
+
+        <label for="editProntuario">Número do Prontuário:</label>
+        <input type="text" id="editProntuario">
+
+        <button class="save-btn" style="background-color: #3182ce; margin-top: 15px;" onclick="atualizarPaciente()">🔄 Atualizar Dados</button>
+      </div>
+
+      <!-- HISTÓRICO E BOTÕES DE AÇÃO -->
       <div id="historicoPaciente" style="margin-top: 15px;"></div>
 
       <button id="btnGerarPDF" class="save-btn" style="background-color: #d69e2e; display: none; margin-top: 10px;" onclick="gerarPDF()">📄 Baixar Prontuário em PDF</button>
       <button id="btnExcluirPaciente" class="save-btn" style="background-color: #e53e3e; display: none; margin-top: 10px;" onclick="excluirPaciente()">🗑️ Excluir Paciente</button>
+
+      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+      <!-- NOVO PACIENTE (Minimizado) -->
+      <details style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+        <summary style="font-weight: bold; cursor: pointer; color: #4a5568; font-size: 15px;">+ Cadastrar Novo Paciente</summary>
+        <div style="margin-top: 15px;">
+          <label for="novoNome">Nome do Paciente:</label>
+          <input type="text" id="novoNome" placeholder="Ex: Maria Silva">
+          
+          <label for="novaIdade">Idade (anos):</label>
+          <input type="number" id="novaIdade" placeholder="Ex: 12">
+
+          <label for="novoGenero">Gênero:</label>
+          <select id="novoGenero">
+            <option value="" disabled selected>-- Selecione --</option>
+            <option value="feminino">Feminino</option>
+            <option value="masculino">Masculino</option>
+          </select>
+
+          <label for="novoProntuario">Número do Prontuário:</label>
+          <input type="text" id="novoProntuario" placeholder="Ex: 1042">
+
+          <button class="calc-btn" style="background-color: #4a5568;" onclick="cadastrarPaciente()">Salvar Paciente</button>
+        </div>
+      </details>
     </div>
 
     <!-- ABA MOYERS (Sem seleção de sexo) -->
@@ -272,19 +303,17 @@
     }
   }
 
-  // --- FUNÇÃO MOYERS ATUALIZADA ---
   function calcularMoyers() {
-    // 1. Verifica se existe um paciente selecionado no prontuário
     if (!pacienteAtivo) {
       alert("Por favor, selecione um paciente na aba 'Pacientes' antes de calcular a análise de Moyers.");
       switchTab('pacientes');
       return;
     }
 
-    // 2. Extrai o sexo diretamente dos dados do paciente ativo
     const sexo = pacienteAtivo.genero;
     if (!sexo) {
-      alert("O paciente selecionado não possui o gênero cadastrado. Por favor, recadastre o paciente com essa informação.");
+      alert("O paciente selecionado não possui o gênero cadastrado. Por favor, atualize os dados do paciente com essa informação.");
+      switchTab('pacientes');
       return;
     }
 
@@ -385,7 +414,6 @@
   let unsubscribePacientes = null;
   let unsubscribeHistorico = null;
 
-  // --- FUNÇÃO DE CADASTRO ATUALIZADA ---
   async function cadastrarPaciente() {
     if (!usuarioLogado) {
       alert("Você precisa estar logado para cadastrar pacientes.");
@@ -412,7 +440,6 @@
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
       });
       alert("Paciente cadastrado com sucesso!");
-      // Limpa os campos após salvar
       document.getElementById('novoNome').value = '';
       document.getElementById('novaIdade').value = '';
       document.getElementById('novoGenero').value = '';
@@ -448,6 +475,7 @@
     const btnExcluir = document.getElementById('btnExcluirPaciente');
     const btnPDF = document.getElementById('btnGerarPDF');
     const banner = document.getElementById('patientBanner');
+    const divDados = document.getElementById('dadosPaciente');
 
     if (!id) {
       pacienteAtivo = null;
@@ -455,6 +483,7 @@
       document.getElementById('historicoPaciente').innerHTML = "";
       btnExcluir.style.display = 'none';
       btnPDF.style.display = 'none';
+      divDados.style.display = 'none'; // Esconde a edição
       banner.classList.add('inactive');
       document.getElementById('btnSalvarMoyers').style.display = 'none';
       document.getElementById('btnSalvarBolton').style.display = 'none';
@@ -465,13 +494,55 @@
       const doc = await db.collection('pacientes').doc(id).get();
       pacienteAtivo = { id: doc.id, ...doc.data() };
       document.getElementById('nomePacienteAtivo').innerText = pacienteAtivo.nome;
+      
+      // Popula os campos do painel de edição
+      document.getElementById('editNome').value = pacienteAtivo.nome || '';
+      document.getElementById('editIdade').value = pacienteAtivo.idade || '';
+      document.getElementById('editGenero').value = pacienteAtivo.genero || '';
+      document.getElementById('editProntuario').value = pacienteAtivo.prontuario || '';
+      
       btnExcluir.style.display = 'block';
       btnPDF.style.display = 'block';
+      divDados.style.display = 'block'; // Mostra a edição
       banner.classList.remove('inactive');
 
       carregarHistorico();
     } catch (error) {
       console.error("Erro ao selecionar paciente:", error);
+    }
+  }
+
+  async function atualizarPaciente() {
+    if (!pacienteAtivo) return;
+
+    const nome = document.getElementById('editNome').value.trim();
+    const idade = document.getElementById('editIdade').value.trim();
+    const genero = document.getElementById('editGenero').value;
+    const prontuario = document.getElementById('editProntuario').value.trim();
+
+    if (!nome || !idade || !genero) {
+      alert("Por favor, preencha o Nome, a Idade e o Gênero do paciente.");
+      return;
+    }
+
+    try {
+      await db.collection('pacientes').doc(pacienteAtivo.id).update({
+        nome: nome,
+        idade: idade,
+        genero: genero,
+        prontuario: prontuario
+      });
+      
+      pacienteAtivo.nome = nome;
+      pacienteAtivo.idade = idade;
+      pacienteAtivo.genero = genero;
+      pacienteAtivo.prontuario = prontuario;
+
+      document.getElementById('nomePacienteAtivo').innerText = nome;
+      alert("Dados do paciente atualizados com sucesso!");
+      
+    } catch(e) {
+      alert("Erro ao atualizar os dados: " + e.message);
     }
   }
 
@@ -575,7 +646,6 @@
     }
   }
 
-  // --- FUNÇÃO GERAR PDF ATUALIZADA ---
   function gerarPDF() {
     if (!pacienteAtivo) return;
 
@@ -587,10 +657,9 @@
     const conteudoPDF = document.createElement('div');
     conteudoPDF.style.padding = '30px';
     conteudoPDF.style.fontFamily = 'Arial, sans-serif';
-    conteudoPDF.style.color = '#000000'; // Força texto preto
-    conteudoPDF.style.backgroundColor = '#ffffff'; // Força fundo branco geral
+    conteudoPDF.style.color = '#000000'; 
+    conteudoPDF.style.backgroundColor = '#ffffff'; 
 
-    // Variáveis formatadas para exibição no PDF
     const idadeTexto = pacienteAtivo.idade ? pacienteAtivo.idade + ' anos' : 'Não informada';
     const generoTexto = pacienteAtivo.genero ? (pacienteAtivo.genero === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado';
 
@@ -611,16 +680,15 @@
     const historicoContainer = document.createElement('div');
     historicoContainer.innerHTML = historicoAtual;
 
-    // Remove os botões de lixeira
     const botoesLixeira = historicoContainer.querySelectorAll('button');
     botoesLixeira.forEach(btn => btn.remove());
 
     const itensTimeline = historicoContainer.querySelectorAll('.timeline-item');
     itensTimeline.forEach(item => {
-      item.style.backgroundColor = '#f7fafc'; // Fundo cinza bem clarinho
-      item.style.color = '#2d3748';          // Letra escura
+      item.style.backgroundColor = '#f7fafc'; 
+      item.style.color = '#2d3748';          
       item.style.border = '1px solid #e2e8f0';
-      item.style.borderLeft = '4px solid #2b6cb0'; // Mantém a barrinha azul do lado
+      item.style.borderLeft = '4px solid #2b6cb0'; 
       item.style.padding = '10px';
       item.style.marginBottom = '10px';
       item.style.borderRadius = '6px';
@@ -632,7 +700,7 @@
       margin:       10,
       filename:     `Prontuario_${pacienteAtivo.nome.replace(/\s+/g, '_')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, backgroundColor: '#ffffff' }, // Garante fundo branco no canvas
+      html2canvas:  { scale: 2, backgroundColor: '#ffffff' }, 
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
