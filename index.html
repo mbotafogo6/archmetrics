@@ -424,10 +424,10 @@
 
     const nome = document.getElementById('novoNome').value.trim();
     const idade = document.getElementById('novaIdade').value.trim();
-    const genero = document.getElementById('novoGenero').value;
+    const genero = document.getElementById('novoSexo').value;
     const prontuario = document.getElementById('novoProntuario').value.trim();
 
-    if (!nome || !idade || !genero) {
+    if (!nome || !idade || !sexo) {
       alert("Por favor, preencha o Nome, a Idade e o Gênero do paciente.");
       return;
     }
@@ -436,7 +436,7 @@
       await db.collection('pacientes').add({
         nome: nome,
         idade: idade,
-        genero: genero,
+        sexo: sexo,
         prontuario: prontuario,
         uidDoutor: usuarioLogado.uid,
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
@@ -444,7 +444,7 @@
       alert("Paciente cadastrado com sucesso!");
       document.getElementById('novoNome').value = '';
       document.getElementById('novaIdade').value = '';
-      document.getElementById('novoGenero').value = '';
+      document.getElementById('novoSexo').value = '';
       document.getElementById('novoProntuario').value = '';
     } catch (error) {
       alert("Erro ao cadastrar paciente: " + error.message);
@@ -499,7 +499,7 @@
       
       document.getElementById('editNome').value = pacienteAtivo.nome || '';
       document.getElementById('editIdade').value = pacienteAtivo.idade || '';
-      document.getElementById('editGenero').value = pacienteAtivo.genero || '';
+      document.getElementById('editSexo').value = pacienteAtivo.sexo || '';
       document.getElementById('editProntuario').value = pacienteAtivo.prontuario || '';
       
       btnExcluir.style.display = 'block';
@@ -518,11 +518,11 @@
 
     const nome = document.getElementById('editNome').value.trim();
     const idade = document.getElementById('editIdade').value.trim();
-    const genero = document.getElementById('editGenero').value;
+    const genero = document.getElementById('editSexo').value;
     const prontuario = document.getElementById('editProntuario').value.trim();
 
-    if (!nome || !idade || !genero) {
-      alert("Por favor, preencha o Nome, a Idade e o Gênero do paciente.");
+    if (!nome || !idade || !sexo) {
+      alert("Por favor, preencha o Nome, a Idade e o Sexo do paciente.");
       return;
     }
 
@@ -530,13 +530,13 @@
       await db.collection('pacientes').doc(pacienteAtivo.id).update({
         nome: nome,
         idade: idade,
-        genero: genero,
+        sexo: sexo,
         prontuario: prontuario
       });
       
       pacienteAtivo.nome = nome;
       pacienteAtivo.idade = idade;
-      pacienteAtivo.genero = genero;
+      pacienteAtivo.sexo = sexo;
       pacienteAtivo.prontuario = prontuario;
 
       document.getElementById('nomePacienteAtivo').innerText = nome;
@@ -664,7 +664,7 @@
     conteudoPDF.style.backgroundColor = '#ffffff'; 
 
     const idadeTexto = pacienteAtivo.idade ? pacienteAtivo.idade + ' anos' : 'Não informada';
-    const generoTexto = pacienteAtivo.genero ? (pacienteAtivo.genero === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado';
+    const sexoTexto = pacienteAtivo.genero ? (pacienteAtivo.sexo === 'masculino' ? 'Masculino' : 'Feminino') : 'Não informado';
 
     conteudoPDF.innerHTML = `
       <div style="text-align: center; border-bottom: 2px solid #2b6cb0; margin-bottom: 20px; padding-bottom: 10px;">
